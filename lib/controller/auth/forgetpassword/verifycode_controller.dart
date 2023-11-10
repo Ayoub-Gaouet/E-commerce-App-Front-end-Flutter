@@ -1,0 +1,45 @@
+import 'package:get/get.dart';
+
+import '../../../core/class/statusraquest.dart';
+import '../../../core/constant/routes.dart';
+import '../../../core/functions/handlingdatacontroller.dart';
+import '../../../data/datasource/remote/auth/verifycode.dart';
+
+abstract class VerifyCodeController extends GetxController {
+  checkCode();
+  goToResetPassword(String verificationCode);
+}
+
+class VerifyCodeControllerImp extends VerifyCodeController {
+  VerifyCodeData verfiyCodeData = VerifyCodeData(Get.find());
+  String? email;
+  StatusRequest? statusRequest=StatusRequest.none;
+
+  @override
+  checkCode() {}
+
+  @override
+  goToResetPassword(verificationCode) async {
+    statusRequest = StatusRequest.loading;
+    update();
+    var response = await verfiyCodeData.postdata(email!, verificationCode);
+    statusRequest = handlingData(response);
+    if (StatusRequest.success == statusRequest) {
+      if (response['status'] == "success") {
+        Get.offNamed(AppRoute.resetPassword, arguments: {'email': email});
+      } else {
+        Get.defaultDialog(
+            title: "ُWarning",
+            middleText: "Verify Code Not Correct");
+        statusRequest = StatusRequest.failure;
+      }
+    }
+  update();
+  }
+
+  @override
+  void onInit() {
+    email = Get.arguments['email'];
+    super.onInit();
+  }
+}
